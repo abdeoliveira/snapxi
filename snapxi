@@ -1,0 +1,178 @@
+#!/usr/bin/ruby
+require 'net/ping'
+unless ENV['USER'] == 'root'
+  puts "You should run as root. ABORTED."
+  abort
+end
+#==========================
+def now
+ Time.new.strftime "%Y.%m.%d_%H.%M.%S"
+end
+#==========================
+def list
+    @snap=[]
+    running = nil
+    running_file = '/.snapshots/.RUNNING_SNAPSHOT'
+    if File.file? running_file then running = File.read(running_file).strip end
+    puts "======================================="
+    puts "                SNAPSHOTS              "
+    puts "======================================="
+    puts " ID   DATE        TIME      COMMENT"
+    puts "---------------------------------------"
+    volumes = `btrfs sub list / | grep snapshots/`.split("\n")
+    volumes.each do |v|
+    @snap<<v.split('@snapshots/').last.strip 
+  end
+  @snap.sort!
+  @snap.each_with_index do |s,i|
+    r = ' '
+    if s == running then r='*' end
+    ss = s.split('_')
+    date = ss[0]
+    time = ss[1].gsub('.',':')
+    desc = ss[2].gsub('+',' ') 
+    puts "#{r}[#{i}]  #{date}  #{time}  #{desc}"
+  end
+  puts "---------------------------------------" 
+end
+#============================
+def rollback
+  device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
+  timer = 5 # seconds before rebooting
+  puts "Choose a snapshot ID to rollback," 
+  puts "or [#{@snap.length}] to ABORT:"
+  id = STDIN.gets.strip.to_i
+  if id <= @snap.length - 1 
+    puts "Rolling back to snapshot ID [#{id}]: #{@snap[id]}."
+  else
+    puts "ABORTED."
+    abort
+  end
+  puts "Confirm? [y/N]"
+  confirm = STDIN.gets.chomp
+  if confirm == 'y' 
+    `mount #{device} /mnt`
+    `mv /mnt/@ /mnt/@snapshots/#{now}_pre+rollback`
+    `btrfs subvolume snapshot /mnt/@snapshots/#{@snap[id]} /mnt/@`
+    `echo "#{@snap[id]}" > /mnt/@snapshots/.RUNNING_SNAPSHOT`
+    `umount /mnt`
+    puts "Confirmed. Rebooting in..."
+      timer.times do |i| 
+        puts timer-=1
+        sleep 1
+      end
+      puts 'Buckle up!'
+    `reboot`
+    else
+      puts "ABORTED."
+    end
+end
+#==================================
+def delete
+  marked_for_deletion=[]
+  puts "Select snapshot(s) to delete."
+  puts "Choose [a] to ABORT:"
+  id = STDIN.gets.chomp
+  if id == 'a' 
+    puts "ABORTED."
+    abort
+  end
+  puts "Deleting snapshot(s):"
+  if id.include? '-'
+    deli = id.split('-').first.to_i
+    delf = id.split('-').last.to_i
+    if deli >= delf then puts "Bad range. ABORTED."; abort end
+    @snap.each_with_index do |s,i|
+        if i >= deli and i<=delf 
+          puts "[#{i}] #{s}" 
+          marked_for_deletion<<s
+        end
+    end
+  elsif id.include? ','
+    list = id.split(',')
+    @snap.each_with_index do |s,i|
+      if list.include? i.to_s 
+        puts "[#{i}] #{s}" 
+        marked_for_deletion<<s
+      end
+    end
+  elsif id.include? '*'
+    @snap.each_with_index do |s,i|
+      if s.include? id.delete('*') 
+        puts "[#{i}] #{s}" 
+        marked_for_deletion<<s
+      end
+    end
+  else
+    puts "[#{id}] #{@snap[id.to_i]}"
+    marked_for_deletion<<@snap[id.to_i]
+  end
+  puts "Confirm? [y/N]"
+  ans = STDIN.gets.chomp
+  if ans == 'y' 
+    puts "Confirmed. Proceeding..."
+    marked_for_deletion.each do |del|
+      puts `btrfs subvolume delete /.snapshots/#{del}`
+    end
+  else
+    puts "ABORTED."
+  end
+end
+#==================================
+def update
+  unless Net::Ping::HTTP.new('1.1.1.1').ping? 
+    puts "No internet connection. ABORTED."
+    abort
+  end
+  update = `xi -Sun`
+  if update.empty?
+     puts "There are no updates."
+     abort
+   else
+     puts "Updates available:"
+     update.split("\n").each do |u|
+       puts "* #{u.split('http').first}"
+     end
+   end
+  puts "Proceed? [Y/n]"
+  ans = STDIN.gets.chomp
+  unless ans == 'n'
+    puts `btrfs subvolume snapshot / /.snapshots/#{now}_pre+update`
+    puts `xi -Suy`
+    sleep 1
+    puts `btrfs subvolume snapshot / /.snapshots/#{now}_pos+update`
+  else
+    puts "ABORTED."
+  end
+ end
+#==================================
+#==================================
+
+opt = ARGV[0]
+comm = ARGV[1]
+
+if opt == 'snapshot'
+  if comm.empty? then comm == 'manual' end
+  puts `btrfs subvolume snapshot / /.snapshots/#{now}_#{comm}`
+end
+
+if opt == 'list'
+  list
+end
+
+if opt == 'rollback'
+  list; rollback
+end
+
+if opt == 'delete'
+  list; delete
+end
+
+if opt == 'update'
+  update
+end
+
+if opt == 'help' or opt == '' 
+  puts 'USAGE: snapxi <snapshot [COMMENT] | delete | rollback | update | list>'
+end
+
