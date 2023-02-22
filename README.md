@@ -8,7 +8,7 @@ It is optimized to be used with Void's xbps package manager.
 
 # Manual
 
-[![alt text]](https://www.youtube.com/watch?v=ivF5kn7lYrI "PART I")
+[!See it on youtube](https://youtu.be/JxDLSmV75ww)
 
 # Troubleshooting
 
