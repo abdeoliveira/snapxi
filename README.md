@@ -8,7 +8,7 @@ It is optimized to be used with Void's xbps package manager.
 
 # Manual
 
-![](videos/part-1.mov)
+![](videos/part-1.mkv)
 
 # Troubleshooting
 
