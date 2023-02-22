@@ -8,7 +8,7 @@ It is optimized to be used with Void's xbps package manager.
 
 # Manual
 
-![](videos/part-1.mkv)
+[![alt text]](https://www.youtube.com/watch?v=ivF5kn7lYrI "PART I")
 
 # Troubleshooting
 
