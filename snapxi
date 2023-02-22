@@ -124,7 +124,7 @@ def update
     puts "No internet connection. ABORTED."
     abort
   end
-  update = `xi -Sun`
+  update = `xi -Mun`
   if update.empty?
      puts "There are no updates."
      abort
@@ -139,7 +139,7 @@ def update
   unless ans == 'n'
     puts `btrfs subvolume snapshot / /.snapshots/#{now}_pre+update`
     puts `xi -Suy`
-    sleep 1
+    #sleep 1
     puts `btrfs subvolume snapshot / /.snapshots/#{now}_pos+update`
   else
     puts "ABORTED."
@@ -150,9 +150,8 @@ def update
 
 opt = ARGV[0]
 comm = ARGV[1]
-
 if opt == 'snapshot'
-  if comm.empty? then comm == 'manual' end
+  if comm.nil? then comm = 'manual' end
   puts `btrfs subvolume snapshot / /.snapshots/#{now}_#{comm}`
 end
 
