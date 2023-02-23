@@ -1,5 +1,10 @@
 #!/usr/bin/ruby
 require 'net/ping'
+
+#===============
+device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
+#===============
+
 unless ENV['USER'] == 'root'
   puts "You should run as root. ABORTED."
   abort
@@ -36,8 +41,7 @@ def list
   puts "---------------------------------------" 
 end
 #============================
-def rollback
-  device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
+def rollback(device)
   timer = 5 # seconds before rebooting
   puts "Choose a snapshot ID to rollback," 
   puts "or [#{@snap.length}] to ABORT:"
@@ -160,7 +164,7 @@ if opt == 'list'
 end
 
 if opt == 'rollback'
-  list; rollback
+  list; rollback(device)
 end
 
 if opt == 'delete'
