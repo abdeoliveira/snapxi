@@ -8,7 +8,7 @@ Script to manipulate BTRFS snapshots optimized for Void's xbps package manager.
 
 # Configuration
 
-- `snapxi` expects a few things to work properly:
+`snapxi` expects a few things to work properly:
 
 1. a subvolume `@` mounted to `/`.
 
@@ -31,9 +31,11 @@ check if your system meets `snapxi` requirements is to mount your `device` to `/
 
 2. Make it executable.
 
-3. Run `sudo snapxi help` for commands. 
-
 # Manual
+
+Run `sudo snapxi help` for commands. 
+
+Please also check the videos in the links below.
 
 [PART 1 (youtube)](https://youtu.be/JxDLSmV75ww)
 
