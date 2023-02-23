@@ -1,5 +1,4 @@
 #!/usr/bin/ruby
-require 'net/ping'
 
 #===============
 device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
@@ -124,7 +123,8 @@ def delete
 end
 #==================================
 def update
-  unless Net::Ping::HTTP.new('1.1.1.1').ping? 
+  code = `ping -c 1 1.1.1.1 > /dev/null 2>&1 ; echo $?`
+  unless code == 0 
     puts "No internet connection. ABORTED."
     abort
   end

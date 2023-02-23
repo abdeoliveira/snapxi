@@ -6,8 +6,6 @@ Script to manipulate BTRFS snapshots optimized to Void's xbps package manager.
 
 - Ruby
 
-- Gem `net-ping`
-
 - `snapxi` also expects a few things to work properly:
 
 1. a subvolume `@` mounted to `/`.
