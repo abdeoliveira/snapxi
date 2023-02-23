@@ -27,9 +27,9 @@ check if your system meets `snapxi` requirements is to mount your `device` to `/
 
 # Installation
 
-1. Copy the snapxi script to your path
+1. Copy the snapxi script to your `PATH`.
 
-2. Make it executable
+2. Make it executable.
 
 3. Run `sudo snapxi help` for commands. 
 
