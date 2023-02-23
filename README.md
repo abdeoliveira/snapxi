@@ -2,11 +2,13 @@
 
 Script to manipulate BTRFS snapshots optimized to Void's xbps package manager. 
 
-# Dependencies
+# Dependency
 
 - Ruby
 
-- `snapxi` also expects a few things to work properly:
+# Configuration
+
+- `snapxi` expects a few things to work properly:
 
 1. a subvolume `@` mounted to `/`.
 
