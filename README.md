@@ -13,11 +13,11 @@ and `sudo gem install net-ping` will solve the aforementioned dependencies.
 
 - `snapxi` also expects a few things to work properly:
 
-* a subvolume `@` mounted to `/`.
+1. a subvolume `@` mounted to `/`.
 
-* a subvolume `@snapshots` mounted to `/.snapshots`. 
+2. a subvolume `@snapshots` mounted to `/.snapshots`. 
 
-* both `@` and `@snapshots` subvolumes to be in the same partition.
+3. both `@` and `@snapshots` subvolumes to be in the same partition.
 Such a partition  must be specified in the `device = ` variable (first lines). 
 
 **Note** that if you have an encrypted device you
