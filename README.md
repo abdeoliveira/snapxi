@@ -8,9 +8,6 @@ Script to manipulate BTRFS snapshots optimized to Void's xbps package manager.
 
 - Gem `net-ping`
 
-If you use a debian based distro, something like `sudo apt install ruby`
-and `sudo gem install net-ping` will solve the aforementioned dependencies.
-
 - `snapxi` also expects a few things to work properly:
 
 1. a subvolume `@` mounted to `/`.
