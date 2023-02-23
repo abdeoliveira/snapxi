@@ -1,6 +1,6 @@
 # snapxi
 
-Script to manipulate BTRFS snapshots optimized to Void's xbps package manager. 
+Script to manipulate BTRFS snapshots optimized for Void's xbps package manager. 
 
 # Dependency
 
