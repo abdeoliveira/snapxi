@@ -18,12 +18,13 @@ and `sudo gem install net-ping` will solve the aforementioned dependencies.
 2. a subvolume `@snapshots` mounted to `/.snapshots`. 
 
 3. both `@` and `@snapshots` subvolumes to be in the same partition.
-Such a partition  must be specified in the `device = ` variable (first lines). 
+Such a partition  must be specified in the `device = ` variable (first lines of 
+`snapxi` code). 
 
 **Note** that if you have an encrypted device you
 need to use `/dev/mapper/[something]` instead of the usual `/dev/sd[X]`. A good test to 
 check if your system meets `snapxi` requirements is to mount your `device` to `/mnt`, like:
-`sudo mount /dev/mapper/crypto-luks /mnt`. After successfull mount, you must see `@` and  `@snapshots` subvolumes in `/mnt`. After such a test, you can safely unmount `/mnt` just doing `sudo umount /mnt`
+`sudo mount /dev/mapper/crypto-luks /mnt`. After successful mount, you must see `@` and  `@snapshots` subvolumes in `/mnt`. After such a test, you can safely unmount `/mnt` just doing `sudo umount /mnt`
 
 
 # Installation
