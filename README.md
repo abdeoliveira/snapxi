@@ -1,14 +1,15 @@
 # snapxi
 
-Script to facilitate managing BTRFS snapshots. 
-It is optimized to be used with Void's xbps package manager. 
-
+Script to manipulate BTRFS snapshots optimized to Void's xbps package manager. 
 
 # Installation
 
 # Manual
 
-[!See it on youtube](https://youtu.be/JxDLSmV75ww)
+[PART 1 (youtube)](https://youtu.be/JxDLSmV75ww)
+
+[PART 2 (youtube)](https://youtu.be/Yuosif8C80c)
+
 
 # Troubleshooting
 
