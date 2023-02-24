@@ -123,11 +123,11 @@ def delete
 end
 #==================================
 def update
-  code = `ping -c 1 1.1.1.1 > /dev/null 2>&1 ; echo $?`.chomp.to_i
-    unless code == 0
-    puts "No internet connection. ABORTED."
-    abort
-  end
+  #code = `ping -c 1 1.1.1.1 > /dev/null 2>&1 ; echo $?`.chomp.to_i
+  #  unless code == 0
+  #  puts "No internet connection. ABORTED."
+  #  abort
+  #end
   update = `xi -Mun`
   if update.empty?
      puts "There are no updates."
