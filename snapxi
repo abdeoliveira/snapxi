@@ -2,6 +2,8 @@
 
 #===============
 device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
+snapdir = '/.snapshots'
+snapvol = '@snapshos'
 #===============
 
 unless ENV['USER'] == 'root'
@@ -10,7 +12,7 @@ unless ENV['USER'] == 'root'
 end
 #==========================
 def now
- Time.new.strftime "%Y.%m.%d_%H.%M.%S"
+ Time.new.strftime "%Y.%m.%d_%H:%M:%S"
 end
 #==========================
 def list
@@ -164,8 +166,12 @@ def update
 opt = ARGV[0]
 comm = ARGV[1]
 if opt == 'snapshot'
+  id = Dir.entries(snapdir).last.to_i + 1
+  `mkdir #{snapdir}/#{id}`
   if comm.nil? then comm = 'manual' end
-  puts `btrfs subvolume snapshot / /.snapshots/#{now}_#{comm}`
+  puts `btrfs subvolume snapshot / #{snapdir}/#{id}/data`
+  infodata = {date: now, comment: comm, kernel: `uname -r`.chomp, pkgs: nil}
+  File.write("#{snapdir}/#{id}/info",infodata,mode:'w')
 end
 
 if opt == 'list'
