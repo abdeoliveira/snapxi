@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 
 #===============
-device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
-snapdir = '/.snapshots'
-snapvol = '@snapshos'
+@device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
+@snapdir = '/.snapshots'
+@snapvol = '@snapshots'
 #===============
 
 unless ENV['USER'] == 'root'
@@ -14,16 +14,24 @@ end
 def now
  Time.new.strftime "%Y.%m.%d,%H:%M:%S"
 end
-def id
-  ids = `ls /.snapshots | nl`
-  return ids.split("\n").length.to_i + 1
+#==========================
+def snapid
+  ids = `btrfs subvolume list / | grep #{@snapvol}/`
+  id_list=[]
+  ids.split("\n").each do |i|
+    id_list<<i.split('/')[1]
+  end
+  return id_list
 end
+#==========================
 def reginfo(path,info,pkgs)
   File.write("#{path}/info",info,mode:'w')
   File.write("#{path}/pkgs",pkgs,mode:'w')
 end
-def snapshot(snapdir,comm,pkg)
-  path = snapdir + '/' + id.to_s
+#=========================
+def snapshot(comm,pkg)
+  id = snapid.last.to_i + 1
+  path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
   `mkdir #{path}`
   if comm.nil? then comm = 'manual' end
@@ -32,16 +40,16 @@ def snapshot(snapdir,comm,pkg)
   reginfo(path,info,pkg)
 end
 #==========================
-def list(snapdir)
+def list
     pklist = '' 
-    line = 65
+    line = 70
     puts "="*line
-    puts " "*(line/2)+"SNAPSHOTS"+" "*(line/2)
+    puts " "*(line/2)+"SNAPSHOTS"
     puts "="*line
     puts "  ID  DATE        TIME      KERNEL   COMMENT            PKGS"
     puts "-"*line
-    (1..id-1).each do |id|
-      path = snapdir + '/' + id.to_s
+    snapid.each do |id|
+      path = @snapdir + '/' + id.to_s
       info = File.read(path + '/info').split(',')
       pkgs = File.read(path + '/pkgs').split(',')
       date  = info[0]
@@ -56,15 +64,15 @@ def list(snapdir)
           unless j==0 then pklist = pklist + ' '*55 + p + "\n" end
         end
       end
-      if id >= 10 then space = " " end
-      if id < 10 then space = "  " end
+      if id.to_i >= 10 then space = " " end
+      if id.to_i < 10 then space = "  " end
       puts "#{space}[#{id}] #{date}  #{time}  #{ker}  #{comm}\
         #{pklist.strip}"
     end
     puts "-"*line 
 end
 #============================
-def rollback(device)
+def rollback
   timer = 5 # seconds before rebooting
   puts "Choose a snapshot ID to rollback," 
   puts "or [#{@snap.length}] to ABORT:"
@@ -78,7 +86,7 @@ def rollback(device)
   puts "Confirm? [y/N]"
   confirm = STDIN.gets.chomp
   if confirm == 'y' 
-    `mount #{device} /mnt`
+    `mount #{@device} /mnt`
     `mv /mnt/@ /mnt/@snapshots/#{now}_pre+rollback`
     `btrfs subvolume snapshot /mnt/@snapshots/#{@snap[id]} /mnt/@`
     `echo "#{@snap[id]}" > /mnt/@snapshots/.RUNNING_SNAPSHOT`
@@ -146,7 +154,7 @@ def delete
   end
 end
 #==================================
-def update(snapdir)
+def update
   pkg = ""
   update = `xi -Mun`
   if update.empty?
@@ -165,9 +173,10 @@ def update(snapdir)
   puts "Proceed? [Y/n]"
   ans = STDIN.gets.chomp
   unless ans == 'n'
-    snapshot(snapdir,'pre update',pkg)    
+    snapshot('pre update',pkg)    
     #puts `xi -Suy`
-    snapshot(snapdir,'post update','')
+    id = snapid.last.to_i
+    snapshot("post [#{id}]",'')
   else
     puts "ABORTED."
   end
@@ -178,15 +187,15 @@ def update(snapdir)
 opt = ARGV[0]
 comm = ARGV[1]
 if opt == 'snapshot'
-  snapshot(snapdir,comm,'')
+  snapshot(comm,'')
 end
 
 if opt == 'list'
-  list(snapdir)
+  list
 end
 
 if opt == 'rollback'
-  list; rollback(device)
+  list; rollback
 end
 
 if opt == 'delete'
@@ -194,7 +203,7 @@ if opt == 'delete'
 end
 
 if opt == 'update'
-  update(snapdir)
+  update
 end
 
 if opt == 'help' or opt == '' 
