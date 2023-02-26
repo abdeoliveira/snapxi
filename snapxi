@@ -12,38 +12,56 @@ unless ENV['USER'] == 'root'
 end
 #==========================
 def now
- Time.new.strftime "%Y.%m.%d_%H:%M:%S"
+ Time.new.strftime "%Y.%m.%d,%H:%M:%S"
+end
+def id
+  ids = `ls /.snapshots | nl`
+  return ids.split("\n").length.to_i + 1
+end
+def reginfo(path,info,pkgs)
+  File.write("#{path}/info",info,mode:'w')
+  File.write("#{path}/pkgs",pkgs,mode:'w')
+end
+def snapshot(snapdir,comm,pkg)
+  path = snapdir + '/' + id.to_s
+  ker = `uname -r`.chomp
+  `mkdir #{path}`
+  if comm.nil? then comm = 'manual' end
+  puts `btrfs subvolume snapshot / #{path}/data`
+  info = "#{now},#{comm},#{ker}"
+  reginfo(path,info,pkg)
 end
 #==========================
-def list
-    @snap=[]
-    running = nil
-    running_file = '/.snapshots/.RUNNING_SNAPSHOT'
-    if File.file? running_file then running = File.read(running_file).strip end
-    puts "======================================================="
-    puts "                         SNAPSHOTS                     "
-    puts "======================================================="
-    puts " ID   DATE        TIME      COMMENT     PKGS"
-    puts "-------------------------------------------------------"
-    volumes = `btrfs sub list / | grep snapshots/`.split("\n")
-    volumes.each do |v|
-    @snap<<v.split('@snapshots/').last.strip 
-  end
-  @snap.sort!
-  @snap.each_with_index do |s,i|
-    r = ' '
-    if s == running then r='*' end
-    ss = s.split('_')
-    date = ss[0]
-    time = ss[1].gsub('.',':')
-    desc = ss[2].gsub('+',' ') 
-    unless ss[3].nil?
-      pkgs = ss[3].sub('#',' ' ).gsub('#',"\n\
-                                         ")
+def list(snapdir)
+    pklist = '' 
+    line = 65
+    puts "="*line
+    puts " "*(line/2)+"SNAPSHOTS"+" "*(line/2)
+    puts "="*line
+    puts "  ID  DATE        TIME      KERNEL   COMMENT            PKGS"
+    puts "-"*line
+    (1..id-1).each do |id|
+      path = snapdir + '/' + id.to_s
+      info = File.read(path + '/info').split(',')
+      pkgs = File.read(path + '/pkgs').split(',')
+      date  = info[0]
+      time  = info[1]
+      desc  = info[2]
+      comm = desc[0..15]
+      ker  = info[3]
+      pklist = '' 
+      unless pkgs.empty?
+        pklist = pkgs[0]+"\n"
+        pkgs.each_with_index do |p,j|
+          unless j==0 then pklist = pklist + ' '*55 + p + "\n" end
+        end
+      end
+      if id >= 10 then space = " " end
+      if id < 10 then space = "  " end
+      puts "#{space}[#{id}] #{date}  #{time}  #{ker}  #{comm}\
+        #{pklist.strip}"
     end
-    puts "#{r}[#{i}]  #{date}  #{time}  #{desc}  #{pkgs}"
-  end
-  puts "--------------------------------------------------------" 
+    puts "-"*line 
 end
 #============================
 def rollback(device)
@@ -128,12 +146,7 @@ def delete
   end
 end
 #==================================
-def update
-  #code = `ping -c 1 1.1.1.1 > /dev/null 2>&1 ; echo $?`.chomp.to_i
-  #  unless code == 0
-  #  puts "No internet connection. ABORTED."
-  #  abort
-  #end
+def update(snapdir)
   pkg = ""
   update = `xi -Mun`
   if update.empty?
@@ -145,17 +158,16 @@ def update
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
        exc = '_' + item[0].split('_').last 
-       pkg = pkg + \
-         + "##{item[0].sub(exc,'').delete('_')}"
+       pkg = pkg + ",#{item[0].sub(exc,'').delete('_')}"
      end
+     pkg = pkg.sub(',','')
    end
   puts "Proceed? [Y/n]"
   ans = STDIN.gets.chomp
   unless ans == 'n'
-    puts `btrfs subvolume snapshot / /.snapshots/#{now}_pre+update_#{pkg}`
-    puts `xi -Suy`
-    sleep 1 #It guarantees the 'pre' comes before the 'pos'
-    puts `btrfs subvolume snapshot / /.snapshots/#{now}_pos+update_#{pkg}`
+    snapshot(snapdir,'pre update',pkg)    
+    #puts `xi -Suy`
+    snapshot(snapdir,'post update','')
   else
     puts "ABORTED."
   end
@@ -166,16 +178,11 @@ def update
 opt = ARGV[0]
 comm = ARGV[1]
 if opt == 'snapshot'
-  id = Dir.entries(snapdir).last.to_i + 1
-  `mkdir #{snapdir}/#{id}`
-  if comm.nil? then comm = 'manual' end
-  puts `btrfs subvolume snapshot / #{snapdir}/#{id}/data`
-  infodata = {date: now, comment: comm, kernel: `uname -r`.chomp, pkgs: nil}
-  File.write("#{snapdir}/#{id}/info",infodata,mode:'w')
+  snapshot(snapdir,comm,'')
 end
 
 if opt == 'list'
-  list
+  list(snapdir)
 end
 
 if opt == 'rollback'
@@ -187,7 +194,7 @@ if opt == 'delete'
 end
 
 if opt == 'update'
-  update
+  update(snapdir)
 end
 
 if opt == 'help' or opt == '' 
