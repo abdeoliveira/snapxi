@@ -53,8 +53,8 @@ end
 #==========================
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
-  info = File.read(path + '/info').split(',')
-  pkgs = File.read(path + '/pkgs')\
+  info = File.read(path + '/info').strip.split(',')
+  pkgs = File.read(path + '/pkgs').strip\
     .delete('[').delete(']').delete('"').split(',')
   date  = info[0]
   time  = info[1]
@@ -122,13 +122,12 @@ def rollback
   puts "Rolling back to snapshot ID [#{rollid}]:"
   showinfo(rollid)
   puts "Confirm? [y/N]"
-  confirm = STDIN.gets.chomp
-  if confirm == 'y' 
+  if STDIN.gets.chomp == 'y' 
     fakesnapshot('pre rollback','')
     id = snapid.last.to_i + 1
     `mount #{@device} /mnt`
-    #`mv /mnt/@ /mnt/#{@snapvol}/#{id}/data`
-    #`btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@`
+    `mv /mnt/@ /mnt/#{@snapvol}/#{id}/data`
+    `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@`
     `umount /mnt`
     puts "Confirmed. Rebooting in..."
       timer.times do |i| 
