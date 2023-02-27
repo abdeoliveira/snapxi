@@ -54,8 +54,7 @@ end
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
   info = File.read(path + '/info').strip.split(',')
-  pkgs = File.read(path + '/pkgs').strip\
-    .delete('[').delete(']').delete('"').split(',')
+  pkgs = File.read(path + '/pkgs').strip.delete('[]"').split(',')
   date  = info[0]
   time  = info[1]
   desc  = info[2]
