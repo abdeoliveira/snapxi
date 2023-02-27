@@ -24,7 +24,7 @@ def snapid
   ids.split("\n").each do |i|
     id_list<<i.split('/')[1]
   end
-  return id_list.sort
+  return id_list
 end
 #==========================
 def snapshot(comm,pkgs)
@@ -70,11 +70,11 @@ def list
     puts "="*line
     puts " "*(line/2)+"SNAPSHOTS"
     puts "="*line
-    puts ' '*2+"ID"\
-      +' '*4+"DATE"\
-      +' '*8+"TIME"\
+    puts ' '*3+"ID"\
+      +' '*6+"DATE"\
+      +' '*7+"TIME"\
       +' '*4+"KERNEL"\
-      +' '*3+"COMMENT"\
+      +' '*4+"COMMENT"\
       +' '*12+"PKGS"
     puts "-"*line
     snapid.each do |id|
@@ -88,14 +88,19 @@ def list
         pklist = pkgs[0]+"\n"
         pkgs.each_with_index do |p,j|
           unless j==0 
-            pklist = pklist + ' '*55 + p + "\n" 
+            pklist = pklist + ' '*57 + p + "\n" 
           end
         end
       end
-      if id.to_i >= 10 then space = " " end
-      if id.to_i < 10 then space = "  " end
-      puts "#{space}[#{id}] #{date}  #{time}  #{ker}  #{comm}\
-         #{pklist.strip}"
+      space = ' '*(4-id.size)
+      kspace = 10 - ker.size
+      puts space\
+        +'['+id+']'\
+        +' '*2+date\
+        +' '*2+time\
+        +' '*2+ker\
+        +' '*kspace+comm\
+        +' '*8+pklist.strip
     end
     puts "-"*line 
 end
