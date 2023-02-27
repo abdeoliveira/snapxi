@@ -24,7 +24,7 @@ def snapid
   ids.split("\n").each do |i|
     id_list<<i.split('/')[1]
   end
-  return id_list
+  return id_list.sort
 end
 #==========================
 def snapshot(comm,pkgs)
@@ -116,7 +116,8 @@ def rollback
   kernel_to = readinfo(rollid)[3]
   if kernel_from != kernel_to
     puts "Booted kernel (#{kernel_from}) is different from"
-    puts "choosen rollback snapshot kernel (#{kernel_to}). ABORTED."
+    puts "choosen rollback snapshot kernel (#{kernel_to})."
+    puts "ABORTED."
     abort
   end
   puts "Rolling back to snapshot ID [#{rollid}]:"
@@ -135,7 +136,7 @@ def rollback
         sleep 1
       end
       puts 'Buckle up!'
-    #`reboot`
+    `reboot`
     else
       puts "ABORTED."
     end
@@ -243,7 +244,7 @@ def update
   ans = STDIN.gets.chomp
   unless ans == 'n'
     snapshot('pre update',pkgs)    
-    #puts `xi -Suy`
+    puts `xi -Suy`
     id = snapid.last.to_i
     snapshot("post [#{id}]",'')
   else
