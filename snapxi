@@ -117,6 +117,10 @@ def rollback
     puts 'ABORTED.'
     abort
   end
+  unless `ls #{@snapdir}/#{rollid} > /dev/null 2>&1; echo $?`.to_i == 0
+    puts "There is no ID [#{rollid}]. ABORTED"
+    abort
+  end
   kernel_from = `uname -r`.chomp 
   kernel_to = readinfo(rollid)[3]
   if kernel_from != kernel_to
@@ -268,11 +272,19 @@ if opt == 'list'
 end
 
 if opt == 'rollback'
-  list; rollback
+  if ARGV[1].nil?
+    list; rollback
+  else
+    rollback
+  end
 end
 
 if opt == 'delete'
-  list; delete
+  if ARGV[1].nil?
+    list; delete
+  else 
+    delete
+  end
 end
 
 if opt == 'update'
