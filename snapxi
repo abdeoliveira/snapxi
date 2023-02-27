@@ -22,13 +22,13 @@ def snapid
   ids = `btrfs subvolume list / | grep #{@snapvol}/`
   id_list=[]
   ids.split("\n").each do |i|
-    id_list<<i.split('/')[1]
+    id_list<<i.split('/')[1].to_i
   end
-  return id_list
+  return id_list.sort
 end
 #==========================
 def snapshot(comm,pkgs)
-  id = snapid.last.to_i + 1
+  id = snapid.last + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
   `mkdir #{path}`
@@ -40,7 +40,7 @@ def snapshot(comm,pkgs)
 end
 #==========================
 def fakesnapshot(comm,pkgs)
-  id = snapid.last.to_i + 1
+  id = snapid.last + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
   `mkdir #{path}`
@@ -92,10 +92,10 @@ def list
           end
         end
       end
-      space = ' '*(4-id.size)
+      space = ' '*(4-id.to_s.size)
       kspace = 10 - ker.size
       puts space\
-        +'['+id+']'\
+        +'['+id.to_s+']'\
         +' '*2+date\
         +' '*2+time\
         +' '*2+ker\
@@ -120,17 +120,17 @@ def rollback
   kernel_from = `uname -r`.chomp 
   kernel_to = readinfo(rollid)[3]
   if kernel_from != kernel_to
-    puts "Booted kernel (#{kernel_from}) is different from"
+    puts "Running kernel (#{kernel_from}) is different from"
     puts "choosen rollback snapshot kernel (#{kernel_to})."
     puts "ABORTED."
     abort
   end
-  puts "Rolling back to snapshot ID [#{rollid}]:"
+  puts "Rolling back to the following snapshot:"
   showinfo(rollid)
   puts "Confirm? [y/N]"
   if STDIN.gets.chomp == 'y' 
     fakesnapshot('pre rollback','')
-    id = snapid.last.to_i + 1
+    id = snapid.last + 1
     `mount #{@device} /mnt`
     `mv /mnt/@ /mnt/#{@snapvol}/#{id}/data`
     `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@`
@@ -176,7 +176,7 @@ def delete
       abort 
     end
     snapid.each do |id|
-      if id.to_i >= delid_i and id.to_i<=delid_f 
+      if id >= delid_i and id <= delid_f 
           showinfo(id) 
           marked_for_deletion<<id
       end
@@ -208,7 +208,7 @@ def delete
       showinfo(delid)
       marked_for_deletion<<delid
     else
-      puts "There is no such an ID [#{delid}]. ABORTED"
+      puts "There is no ID [#{delid}]. ABORTED"
       abort
     end
   end
@@ -250,7 +250,7 @@ def update
   unless ans == 'n'
     snapshot('pre update',pkgs)    
     puts `xi -Suy`
-    id = snapid.last.to_i
+    id = snapid.last
     snapshot("post [#{id}]",'')
   else
     puts "ABORTED."
