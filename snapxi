@@ -14,6 +14,10 @@ def now
  Time.new.strftime "%Y.%m.%d,%H:%M:%S"
 end
 #==========================
+def letters
+ return [*'a'..'z',*'A'..'Z']
+end
+#==========================
 def snapid
   ids = `btrfs subvolume list / | grep #{@snapvol}/`
   id_list=[]
@@ -34,6 +38,18 @@ def snapshot(comm,pkgs)
   File.write("#{path}/info",info,mode:'w')
   File.write("#{path}/pkgs",pkgs,mode:'a')
 end
+#==========================
+def fakesnapshot(comm,pkgs)
+  id = snapid.last.to_i + 1
+  path = @snapdir + '/' + id.to_s
+  ker = `uname -r`.chomp
+  `mkdir #{path}`
+  if comm.nil? then comm = 'manual' end
+  info = "#{now},#{comm},#{ker}"
+  File.write("#{path}/info",info,mode:'w')
+  File.write("#{path}/pkgs",pkgs,mode:'a')
+end
+
 #==========================
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
@@ -86,22 +102,33 @@ end
 #============================
 def rollback
   timer = 5 # seconds before rebooting
-  puts "Choose a snapshot ID to rollback," 
-  puts "or any letter to ABORT:"
-  id = STDIN.gets.strip.to_i
-  if id <= @snap.length - 1 
-    puts "Rolling back to snapshot ID [#{id}]: #{@snap[id]}."
-  else
-    puts "ABORTED."
+  rollid = ARGV[1]
+  if rollid.nil?
+   puts "Choose a snapshot ID to rollback," 
+   puts "or type any letter to ABORT:"
+   rollid = STDIN.gets.strip
+  end
+  if letters.include? rollid
+    puts 'ABORTED.'
     abort
   end
+  kernel_from = `uname -r`.chomp 
+  kernel_to = readinfo(rollid)[3]
+  if kernel_from != kernel_to
+    puts "Booted kernel (#{kernel_from}) is different from"
+    puts "rollback snapshot kernel ([#{rollid}] #{kernel_to}). ABORTED."
+    abort
+  end
+  puts "Rolling back to snapshot ID [#{rollid}]:"
+  showinfo(rollid)
   puts "Confirm? [y/N]"
   confirm = STDIN.gets.chomp
   if confirm == 'y' 
+    fakesnapshot('pre rollback','')
+    id = snapid.last.to_i + 1
     `mount #{@device} /mnt`
-    `mv /mnt/@ /mnt/@snapshots/#{now}_pre+rollback`
-    `btrfs subvolume snapshot /mnt/@snapshots/#{@snap[id]} /mnt/@`
-    `echo "#{@snap[id]}" > /mnt/@snapshots/.RUNNING_SNAPSHOT`
+    #`mv /mnt/@ /mnt/#{@snapvol}/#{id}/data`
+    #`btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@`
     `umount /mnt`
     puts "Confirmed. Rebooting in..."
       timer.times do |i| 
@@ -109,7 +136,7 @@ def rollback
         sleep 1
       end
       puts 'Buckle up!'
-    `reboot`
+    #`reboot`
     else
       puts "ABORTED."
     end
@@ -127,11 +154,11 @@ def delete
   delid = ARGV[1]
   marked_for_deletion=[]
   if delid.nil?
-    puts "Select snapshot(s) to delete."
-    puts "Choose [a] to ABORT:"
+    puts "Select snapshot(s) to delete,"
+    puts "or type any letter to ABORT:"
     delid = STDIN.gets.chomp
   end
-  if delid == 'a' 
+  if letters.include? delid 
     puts "ABORTED."
     abort
   end
@@ -172,8 +199,13 @@ def delete
       end
     end
   else
-    showinfo(delid)
-    marked_for_deletion<<delid
+    if `ls #{@snapdir}/#{delid} > /dev/null 2>&1; echo $?`.to_i == 0
+      showinfo(delid)
+      marked_for_deletion<<delid
+    else
+      puts "There is no such an ID [#{delid}]. ABORTED"
+      abort
+    end
   end
   puts "Confirm? [y/N]"
   ans = STDIN.gets.chomp
