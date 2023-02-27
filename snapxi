@@ -23,7 +23,7 @@ def snapid
   return id_list
 end
 #==========================
-def snapshot(comm,pkg)
+def snapshot(comm,pkgs)
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
@@ -32,28 +32,34 @@ def snapshot(comm,pkg)
   puts `btrfs subvolume snapshot / #{path}/data`
   info = "#{now},#{comm},#{ker}"
   File.write("#{path}/info",info,mode:'w')
-  File.write("#{path}/pkgs",pkg,mode:'w')
+  File.write("#{path}/pkgs",pkgs,mode:'a')
 end
 #==========================
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
   info = File.read(path + '/info').split(',')
-  pkgs = File.read(path + '/pkgs').split(',')
+  pkgs = File.read(path + '/pkgs')\
+    .delete('[').delete(']').delete('"').split(',')
   date  = info[0]
   time  = info[1]
   desc  = info[2]
-  comm = desc[0..15]
+  comm = desc[0..20]
   ker  = info[3]
   return [date,time,comm,ker,pkgs]
 end
 #==========================
 def list
     pklist = '' 
-    line = 70
+    line = 75
     puts "="*line
     puts " "*(line/2)+"SNAPSHOTS"
     puts "="*line
-    puts "  ID  DATE        TIME      KERNEL   COMMENT            PKGS"
+    puts ' '*2+"ID"\
+      +' '*4+"DATE"\
+      +' '*8+"TIME"\
+      +' '*4+"KERNEL"\
+      +' '*3+"COMMENT"\
+      +' '*12+"PKGS"
     puts "-"*line
     snapid.each do |id|
       date = readinfo(id)[0]
@@ -73,7 +79,7 @@ def list
       if id.to_i >= 10 then space = " " end
       if id.to_i < 10 then space = "  " end
       puts "#{space}[#{id}] #{date}  #{time}  #{ker}  #{comm}\
-        #{pklist.strip}"
+         #{pklist.strip}"
     end
     puts "-"*line 
 end
@@ -118,10 +124,13 @@ def showinfo(id)
 end
 #==================================
 def delete
+  delid = ARGV[1]
   marked_for_deletion=[]
-  puts "Select snapshot(s) to delete."
-  puts "Choose [a] to ABORT:"
-  delid = STDIN.gets.chomp
+  if delid.nil?
+    puts "Select snapshot(s) to delete."
+    puts "Choose [a] to ABORT:"
+    delid = STDIN.gets.chomp
+  end
   if delid == 'a' 
     puts "ABORTED."
     abort
@@ -138,7 +147,7 @@ def delete
       if id.to_i >= delid_i and id.to_i<=delid_f 
           showinfo(id) 
           marked_for_deletion<<id
-        end
+      end
     end
   elsif delid.include? ','
     list = delid.split(',')
@@ -171,15 +180,15 @@ def delete
   if ans == 'y' 
     puts "Confirmed. Proceeding..."
     marked_for_deletion.each do |id|
-      @code = `btrfs subvolume delete #{@snapdir}/#{id}/data;echo $?`.to_i
-        #+  `rm -r #{@snapdir}/#{id};echo $?`.to_i
+      @code = `btrfs subvolume delete #{@snapdir}/#{id}/data; echo $?`.to_i\
+        + `rm -r #{@snapdir}/#{id}; echo $?`.to_i
     end
     if @code == 0 
       puts "Done."
     else
       puts "Oops... something went wrong. :-("
     end
-  else
+  else #if choosed N
     puts "ABORTED."
   end
 end
@@ -192,18 +201,17 @@ def update
      abort
    else
      puts "Updates available:"
+     pkgs = []
      update.split("\n").each do |u|
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
-       exc = '_' + item[0].split('_').last 
-       pkg = pkg + ",#{item[0].sub(exc,'').delete('_')}"
+       pkgs<<item[0]
      end
-     pkg = pkg.sub(',','')
    end
   puts "Proceed? [Y/n]"
   ans = STDIN.gets.chomp
   unless ans == 'n'
-    snapshot('pre update',pkg)    
+    snapshot('pre update',pkgs)    
     #puts `xi -Suy`
     id = snapid.last.to_i
     snapshot("post [#{id}]",'')
