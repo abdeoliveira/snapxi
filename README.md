@@ -44,7 +44,5 @@ Please also check the videos in the links below.
 
 # Troubleshooting
 
-# Known Bugs
+# Known Bugs 
 
-Rolling back to a snapshot with different kernel than that you are booted in is not possible
-with `snapxi`! I will limit the `rollback` funtionality to prevent it.
