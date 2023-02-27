@@ -5,7 +5,6 @@
 @snapdir = '/.snapshots'
 @snapvol = '@snapshots'
 #===============
-
 unless ENV['USER'] == 'root'
   puts "You should run as root. ABORTED."
   abort
@@ -24,11 +23,6 @@ def snapid
   return id_list
 end
 #==========================
-def reginfo(path,info,pkgs)
-  File.write("#{path}/info",info,mode:'w')
-  File.write("#{path}/pkgs",pkgs,mode:'w')
-end
-#=========================
 def snapshot(comm,pkg)
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
@@ -37,7 +31,20 @@ def snapshot(comm,pkg)
   if comm.nil? then comm = 'manual' end
   puts `btrfs subvolume snapshot / #{path}/data`
   info = "#{now},#{comm},#{ker}"
-  reginfo(path,info,pkg)
+  File.write("#{path}/info",info,mode:'w')
+  File.write("#{path}/pkgs",pkg,mode:'w')
+end
+#==========================
+def readinfo(id)
+  path = @snapdir + '/' + id.to_s
+  info = File.read(path + '/info').split(',')
+  pkgs = File.read(path + '/pkgs').split(',')
+  date  = info[0]
+  time  = info[1]
+  desc  = info[2]
+  comm = desc[0..15]
+  ker  = info[3]
+  return [date,time,comm,ker,pkgs]
 end
 #==========================
 def list
@@ -49,19 +56,18 @@ def list
     puts "  ID  DATE        TIME      KERNEL   COMMENT            PKGS"
     puts "-"*line
     snapid.each do |id|
-      path = @snapdir + '/' + id.to_s
-      info = File.read(path + '/info').split(',')
-      pkgs = File.read(path + '/pkgs').split(',')
-      date  = info[0]
-      time  = info[1]
-      desc  = info[2]
-      comm = desc[0..15]
-      ker  = info[3]
+      date = readinfo(id)[0]
+      time = readinfo(id)[1]
+      comm = readinfo(id)[2]
+      ker = readinfo(id)[3]
+      pkgs = readinfo(id)[4]
       pklist = '' 
       unless pkgs.empty?
         pklist = pkgs[0]+"\n"
         pkgs.each_with_index do |p,j|
-          unless j==0 then pklist = pklist + ' '*55 + p + "\n" end
+          unless j==0 
+            pklist = pklist + ' '*55 + p + "\n" 
+          end
         end
       end
       if id.to_i >= 10 then space = " " end
@@ -75,7 +81,7 @@ end
 def rollback
   timer = 5 # seconds before rebooting
   puts "Choose a snapshot ID to rollback," 
-  puts "or [#{@snap.length}] to ABORT:"
+  puts "or any letter to ABORT:"
   id = STDIN.gets.strip.to_i
   if id <= @snap.length - 1 
     puts "Rolling back to snapshot ID [#{id}]: #{@snap[id]}."
@@ -103,51 +109,75 @@ def rollback
     end
 end
 #==================================
+def showinfo(id)
+  date = readinfo(id)[0]
+  time = readinfo(id)[1]
+  comm = readinfo(id)[2]
+  ker = readinfo(id)[3]
+  puts "[#{id}] #{date} #{time} #{ker} #{comm}" 
+end
+#==================================
 def delete
   marked_for_deletion=[]
   puts "Select snapshot(s) to delete."
   puts "Choose [a] to ABORT:"
-  id = STDIN.gets.chomp
-  if id == 'a' 
+  delid = STDIN.gets.chomp
+  if delid == 'a' 
     puts "ABORTED."
     abort
   end
   puts "Deleting snapshot(s):"
-  if id.include? '-'
-    deli = id.split('-').first.to_i
-    delf = id.split('-').last.to_i
-    if deli >= delf then puts "Bad range. ABORTED."; abort end
-    @snap.each_with_index do |s,i|
-        if i >= deli and i<=delf 
-          puts "[#{i}] #{s}" 
-          marked_for_deletion<<s
+  if delid.include? '-'
+    delid_i = delid.split('-').first.to_i
+    delid_f = delid.split('-').last.to_i
+    if delid_i >= delid_f 
+      puts "Bad range. ABORTED."
+      abort 
+    end
+    snapid.each do |id|
+      if id.to_i >= delid_i and id.to_i<=delid_f 
+          showinfo(id) 
+          marked_for_deletion<<id
         end
     end
-  elsif id.include? ','
-    list = id.split(',')
-    @snap.each_with_index do |s,i|
-      if list.include? i.to_s 
-        puts "[#{i}] #{s}" 
-        marked_for_deletion<<s
+  elsif delid.include? ','
+    list = delid.split(',')
+    snapid.each do |id|
+      if list.include? id.to_s 
+        showinfo(id) 
+        marked_for_deletion<<id
       end
     end
-  elsif id.include? '*'
-    @snap.each_with_index do |s,i|
-      if s.include? id.delete('*') 
-        puts "[#{i}] #{s}" 
-        marked_for_deletion<<s
+  elsif delid.include? 'c='
+    snapid.each do |id|
+      if readinfo(id)[2].include? delid.sub('c=','')
+        showinfo(id) 
+        marked_for_deletion<<id
+      end
+    end
+  elsif delid.include? 'k='
+    snapid.each do |id|
+      if readinfo(id)[3] == delid.sub('k=','')
+        showinfo(id) 
+        marked_for_deletion<<id
       end
     end
   else
-    puts "[#{id}] #{@snap[id.to_i]}"
-    marked_for_deletion<<@snap[id.to_i]
+    showinfo(delid)
+    marked_for_deletion<<delid
   end
   puts "Confirm? [y/N]"
   ans = STDIN.gets.chomp
   if ans == 'y' 
     puts "Confirmed. Proceeding..."
-    marked_for_deletion.each do |del|
-      puts `btrfs subvolume delete /.snapshots/#{del}`
+    marked_for_deletion.each do |id|
+      @code = `btrfs subvolume delete #{@snapdir}/#{id}/data;echo $?`.to_i
+        #+  `rm -r #{@snapdir}/#{id};echo $?`.to_i
+    end
+    if @code == 0 
+      puts "Done."
+    else
+      puts "Oops... something went wrong. :-("
     end
   else
     puts "ABORTED."
@@ -182,12 +212,10 @@ def update
   end
  end
 #==================================
-#==================================
-
 opt = ARGV[0]
-comm = ARGV[1]
+#==================================
 if opt == 'snapshot'
-  snapshot(comm,'')
+  snapshot(ARGV[1],'')
 end
 
 if opt == 'list'
