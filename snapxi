@@ -108,8 +108,7 @@ def rollback
   timer = 5 # seconds before rebooting
   rollid = ARGV[1]
   if rollid.nil?
-   puts "Choose a snapshot ID to rollback," 
-   puts "or type any letter to ABORT:"
+   puts "Choose a snapshot ID to rollback or type any letter to ABORT:"
    rollid = STDIN.gets.strip
   end
   if letters.include? rollid
@@ -162,8 +161,7 @@ def delete
   delid = ARGV[1]
   marked_for_deletion=[]
   if delid.nil?
-    puts "Select snapshot(s) to delete,"
-    puts "or type any letter to ABORT:"
+    puts "Select snapshot(s) to delete or type any letter to ABORT:"
     delid = STDIN.gets.chomp
   end
   if letters.include? delid 
