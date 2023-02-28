@@ -167,7 +167,6 @@ def delete
     puts "ABORTED."
     abort
   end
-  puts "Deleting snapshot(s):"
   if delid.include? '-'
     delid_i = delid.split('-').first.to_i
     delid_f = delid.split('-').last.to_i
@@ -204,15 +203,16 @@ def delete
       end
     end
   else
-    if `ls #{@snapdir}/#{delid} > /dev/null 2>&1; echo $?`.to_i == 0
-      showinfo(delid)
-      marked_for_deletion<<delid
-    else
-      puts "There is no ID [#{delid}]. ABORTED"
-      abort
+    if snapid.include? delid.to_i
+        showinfo(delid)
+        marked_for_deletion<<delid
     end
   end
-  puts "Confirm? [y/N]"
+    if marked_for_deletion.empty?
+      puts "No snapshot meets the given criteria. ABORTED."
+      abort
+    end
+  puts "Confirm deletion of the selected snapshots above? [y/N]"
   ans = STDIN.gets.chomp
   if ans == 'y' 
     puts "Confirmed. Proceeding..."
