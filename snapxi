@@ -122,9 +122,8 @@ def rollback
   kernel_from = `uname -r`.chomp 
   kernel_to = readinfo(rollid)[3]
   if kernel_from != kernel_to
-    puts "Running kernel (#{kernel_from}) is different from"
-    puts "choosen rollback snapshot kernel (#{kernel_to})."
-    puts "ABORTED."
+    puts "Running kernel (#{kernel_from}) and\
+ snapshot [#{rollid}] kernel (#{kernel_to}) are different.\nABORTED."
     abort
   end
   puts "Rolling back to the following snapshot:"
