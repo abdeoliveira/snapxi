@@ -288,7 +288,7 @@ if opt == 'update'
   update
 end
 
-if opt == 'help' or opt == '' 
+if opt == 'help' 
   puts 'USAGE: snapxi <snapshot [COMMENT] | delete | rollback | update | list>'
 end
 
