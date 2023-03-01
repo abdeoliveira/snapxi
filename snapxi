@@ -130,24 +130,25 @@ def rollback
   #-----------------------
   kernel_list = `vkpurge list`.split("\n") 
   purge=false
+  kernel_del = []
   if kernel_list.length != 0 
     kernel_list.each do |k|
       if k.delete('._').to_i > kernel_from.delete('._').to_i
         purge=true
+        kernel_del<<k
       end
     end
   end
   if purge
     puts "Delete the following kernel(s) before rolling back:"
     kernel_list.each do |k|
-      if k != kernel_from        
+      if kernel_del.include? k     
         puts "* "+k
       end
     end
     puts "TIP: you may use 'sudo vkpurge rm all'."
     abort
   end
-
   #--------------------------
   puts "Rolling back to the following snapshot:"
   showinfo(rollid)
