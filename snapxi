@@ -10,6 +10,13 @@ unless ENV['USER'] == 'root'
   abort
 end
 #==========================
+if File.file?'/tmp/snapxi-kernel-update'
+  puts "It seems you have upgraded the kernel recently without rebooting.\n\
+It is strongly recommended you reboot into the new kernel before using snapxi.\n\
+ABORTED."
+  abort
+end
+#==========================
 def now
  Time.new.strftime "%Y.%m.%d,%H:%M:%S"
 end
@@ -263,10 +270,12 @@ def update
    else
      puts "Updates available:"
      pkgs = []
+     kernel_update=false
      update.split("\n").each do |u|
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
        pkgs<<item[0]
+       if item[0].include? 'linux' then kernel_update=true end
      end
    end
   puts "Proceed? [Y/n]"
@@ -276,6 +285,9 @@ def update
     puts `xi -Suy`
     id = snapid.last
     snapshot("post [#{id}]",'')
+    if kernel_update
+      File.write('/tmp/snapxi-kernel-update',pkgs,mode:'w')
+    end
   else
     puts "ABORTED."
   end
