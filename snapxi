@@ -287,6 +287,11 @@ def update
     snapshot("post [#{id}]",'')
     if kernel_update
       File.write('/tmp/snapxi-kernel-update',pkgs,mode:'w')
+      puts "================="
+      puts "    IMPORTANT:"
+      puts "================="
+      puts "It seems you have upgraded the kernel. It is STRONGLY recommended
+      you reboot the system before using snapxi."
     end
   else
     puts "ABORTED."
