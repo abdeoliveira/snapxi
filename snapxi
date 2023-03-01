@@ -119,6 +119,7 @@ def rollback
     puts "There is no ID [#{rollid}]. ABORTED"
     abort
   end
+  #----------------------
   kernel_from = `uname -r`.chomp 
   kernel_to = readinfo(rollid)[3]
   if kernel_from != kernel_to
@@ -126,19 +127,28 @@ def rollback
  different from snapshot [#{rollid}] kernel (#{kernel_to}).\nABORTED."
     abort
   end
+  #-----------------------
   kernel_list = `vkpurge list`.split("\n") 
-  if kernel_list.length != 0
+  purge=false
+  if kernel_list.length != 0 
+    kernel_list.each do |k|
+      if k.delete('._').to_i > kernel_from.delete('._').to_i
+        purge=true
+      end
+    end
+  end
+  if purge
     puts "Delete the following kernel(s) before rolling back:"
     kernel_list.each do |k|
-      if k != kernel_from
+      if k != kernel_from        
         puts "* "+k
       end
     end
     puts "TIP: you may use 'sudo vkpurge rm all'."
     abort
   end
-  
-  abort
+
+  #--------------------------
   puts "Rolling back to the following snapshot:"
   showinfo(rollid)
   puts "Confirm? [y/N]"
