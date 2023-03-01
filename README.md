@@ -4,7 +4,9 @@ Script to manipulate BTRFS snapshots optimized for Void's xbps package manager.
 
 # Dependency
 
-- Ruby
+- `ruby`
+
+- `vkpurge` (for rollbacks only).
 
 # Configuration
 
