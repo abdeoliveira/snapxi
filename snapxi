@@ -146,7 +146,7 @@ def rollback
         puts "* "+k
       end
     end
-    puts "TIP: you may use 'sudo vkpurge rm all'."
+    puts "TIP: you may use 'sudo vkpurge rm <version>'."
     abort
   end
   #--------------------------
