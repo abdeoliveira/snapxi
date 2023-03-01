@@ -135,7 +135,10 @@ def rollback
     abort
   end
   #-----------------------
-  kernel_list = `vkpurge list`.split("\n") 
+  kernel_list=[]
+  Dir['/boot/vmlinu*'].each do |k|
+    kernel_list<<k.split('-').last
+  end
   purge=false
   kernel_del = []
   if kernel_list.length != 0 
