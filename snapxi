@@ -35,7 +35,7 @@ def snapid
 end
 #==========================
 def snapshot(comm,pkgs)
-  id = snapid.last + 1
+  id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
   `mkdir #{path}`
@@ -166,10 +166,20 @@ def rollback
   if STDIN.gets.chomp == 'y' 
     fakesnapshot('pre rollback','')
     id = snapid.last + 1
-    `mount #{@device} /mnt`
-    `mv /mnt/@ /mnt/#{@snapvol}/#{id}/data`
-    `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@`
+    `mount -o subvolid=5 #{@device} /mnt`
+    #----------------
+    unless `ls /mnt/@root > /dev/null 2>&1; echo $?`.to_i == 0 \
+        and `ls /mnt/@snapshots > /dev/null 2>&1; echo $?`.to_i == 0
+      puts "Mounting stage went wrong. ABORTED."
+      `umount /mnt`
+      abort
+    end
+    #----------------
+    `mv /mnt/@root /mnt/#{@snapvol}/#{id}/data`
+    `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
     `umount /mnt`
+    rootid = `btrfs subvolume list / | grep @root`.split(' ')[1].to_i
+    #`btrfs subvolume set-default #{rootid} /`
     puts "Confirmed. Rebooting in..."
       timer.times do |i| 
         puts timer-=1
