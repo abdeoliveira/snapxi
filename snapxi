@@ -150,7 +150,7 @@ def rollback
     end
   end
   if purge
-    puts "Delete the following kernel(s) before rolling back:"
+    puts "Remove the following kernel(s) before rolling back:"
     kernel_list.each do |k|
       if kernel_del.include? k     
         puts "* "+k
@@ -293,8 +293,8 @@ def update
       puts "================="
       puts "    IMPORTANT:"
       puts "================="
-      puts "It seems you have upgraded the kernel. It is STRONGLY recommended
-      you reboot the system before using snapxi."
+      puts "It seems you have upgraded the kernel." 
+      puts "It is recommended that you reboot the system before using snapxi again."
     end
   else
     puts "ABORTED."
