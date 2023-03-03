@@ -167,8 +167,6 @@ def rollback
   showinfo(rollid)
   puts "Confirm? [y/N]"
   if STDIN.gets.chomp == 'y' 
-    fakesnapshot('pre rollback','')
-    id = snapid.last + 1
     `mount -o subvolid=5 #{@device} /mnt`
     #----------------
     unless `ls /mnt/#{@rootvol} > /dev/null 2>&1; echo $?`.to_i == 0 \
@@ -178,6 +176,8 @@ def rollback
       abort
     end
     #----------------
+    id = snapid.last + 1
+    fakesnapshot('pre rollback','')
     `mv /mnt/#{@rootvol} /mnt/#{@snapvol}/#{id}/data`
     `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
     `umount /mnt`
