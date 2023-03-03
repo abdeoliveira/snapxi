@@ -62,7 +62,7 @@ end
 #==========================
 def list
     pklist = '' 
-    line = 75
+    line = 85
     puts "="*line
     puts " "*(line/2)+"SNAPSHOTS"
     puts "="*line
