@@ -1,5 +1,4 @@
 #!/usr/bin/ruby
-
 #===============
 @device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
 @snapdir = '/.snapshots'
@@ -35,29 +34,19 @@ def snapid
   return id_list.sort
 end
 #==========================
-def snapshot(comm,pkgs)
+def snapshot(comm,pkgs,fake)
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
   `mkdir #{path}`
   if comm.nil? then comm = 'manual' end
-  puts `btrfs subvolume snapshot / #{path}/data`
+  unless fake 
+    puts `btrfs subvolume snapshot / #{path}/data` 
+  end
   info = "#{now},#{comm},#{ker}"
   File.write("#{path}/info",info,mode:'w')
   File.write("#{path}/pkgs",pkgs,mode:'a')
 end
-#==========================
-def fakesnapshot(comm,pkgs)
-  id = snapid.last + 1
-  path = @snapdir + '/' + id.to_s
-  ker = `uname -r`.chomp
-  `mkdir #{path}`
-  if comm.nil? then comm = 'manual' end
-  info = "#{now},#{comm},#{ker}"
-  File.write("#{path}/info",info,mode:'w')
-  File.write("#{path}/pkgs",pkgs,mode:'a')
-end
-
 #==========================
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
@@ -82,7 +71,7 @@ def list
       +' '*7+"TIME"\
       +' '*4+"KERNEL"\
       +' '*4+"COMMENT"\
-      +' '*12+"PKGS"
+      +' '*14+"PKGS"
     puts "-"*line
     snapid.each do |id|
       date = readinfo(id)[0]
@@ -95,7 +84,7 @@ def list
         pklist = pkgs[0]+"\n"
         pkgs.each_with_index do |p,j|
           unless j==0 
-            pklist = pklist + ' '*57 + p + "\n" 
+            pklist = pklist + ' '*60 + p + "\n" 
           end
         end
       end
@@ -107,7 +96,7 @@ def list
         +' '*2+time\
         +' '*2+ker\
         +' '*kspace+comm\
-        +' '*8+pklist.strip
+        +' '*11+pklist.strip
     end
     puts "-"*line 
 end
@@ -150,7 +139,7 @@ def rollback
     end
     #----------------
     id = snapid.last + 1
-    fakesnapshot('pre rollback','')
+    snapshot("pre rollback to [#{rollid}]",'',true)
     `mv /mnt/#{@rootvol} /mnt/#{@snapvol}/#{id}/data`
     `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
     `umount /mnt`
@@ -270,10 +259,10 @@ def update
   puts "Proceed? [Y/n]"
   ans = STDIN.gets.chomp
   unless ans == 'n'
-    snapshot('pre update',pkgs)    
+    snapshot('pre update',pkgs,false)    
     puts `xi -Suy`
     id = snapid.last
-    snapshot("post [#{id}]",'')
+    snapshot("post [#{id}]",'',false)
     if kernel_update
       File.write('/tmp/snapxi-kernel-update',pkgs,mode:'w')
       puts "================="
@@ -290,7 +279,7 @@ def update
 opt = ARGV[0]
 #==================================
 if opt == 'snapshot'
-  snapshot(ARGV[1],'')
+  snapshot(ARGV[1],'',false)
 end
 
 if opt == 'list'
