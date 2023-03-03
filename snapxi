@@ -136,33 +136,6 @@ def rollback
     abort
   end
   #-----------------------
-=begin
-  kernel_list=[]
-  Dir['/boot/vmlinu*'].each do |k|
-    kernel_list<<k.split('-').last
-  end
-  purge=false
-  kernel_del = []
-  if kernel_list.length != 0 
-    kernel_list.each do |k|
-      if k.delete('._').to_i > kernel_from.delete('._').to_i
-        purge=true
-        kernel_del<<k
-      end
-    end
-  end
-  if purge
-    puts "Remove the following kernel(s) before rolling back:"
-    kernel_list.each do |k|
-      if kernel_del.include? k     
-        puts "* "+k
-      end
-    end
-    puts "TIP: you may use 'sudo vkpurge rm <version>'."
-    abort
-  end
-=end
-  #--------------------------
   puts "Rolling back to the following snapshot:"
   showinfo(rollid)
   puts "Confirm? [y/N]"
