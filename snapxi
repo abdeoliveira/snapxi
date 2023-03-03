@@ -4,6 +4,7 @@
 @device = '/dev/mapper/luks-cb826ef1-c466-4b9b-b11c-2b7b8fab5210' 
 @snapdir = '/.snapshots'
 @snapvol = '@snapshots'
+@rootvol = '@root'
 #===============
 unless ENV['USER'] == 'root'
   puts "You should run as root. ABORTED."
@@ -135,6 +136,7 @@ def rollback
     abort
   end
   #-----------------------
+=begin
   kernel_list=[]
   Dir['/boot/vmlinu*'].each do |k|
     kernel_list<<k.split('-').last
@@ -159,6 +161,7 @@ def rollback
     puts "TIP: you may use 'sudo vkpurge rm <version>'."
     abort
   end
+=end
   #--------------------------
   puts "Rolling back to the following snapshot:"
   showinfo(rollid)
@@ -168,18 +171,18 @@ def rollback
     id = snapid.last + 1
     `mount -o subvolid=5 #{@device} /mnt`
     #----------------
-    unless `ls /mnt/@root > /dev/null 2>&1; echo $?`.to_i == 0 \
-        and `ls /mnt/@snapshots > /dev/null 2>&1; echo $?`.to_i == 0
+    unless `ls /mnt/#{@rootvol} > /dev/null 2>&1; echo $?`.to_i == 0 \
+        and `ls /mnt/#{@snapvol} > /dev/null 2>&1; echo $?`.to_i == 0
       puts "Mounting stage went wrong. ABORTED."
       `umount /mnt`
       abort
     end
     #----------------
-    `mv /mnt/@root /mnt/#{@snapvol}/#{id}/data`
+    `mv /mnt/#{@rootvol} /mnt/#{@snapvol}/#{id}/data`
     `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
     `umount /mnt`
-    rootid = `btrfs subvolume list / | grep @root`.split(' ')[1].to_i
-    #`btrfs subvolume set-default #{rootid} /`
+    root_id = `btrfs subvolume list / | grep #{@rootvol}`.split(' ')[1].to_i
+    `btrfs subvolume set-default #{root_id} /`
     puts "Confirmed. Rebooting in..."
       timer.times do |i| 
         puts timer-=1
