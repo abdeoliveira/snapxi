@@ -17,7 +17,7 @@ in the code itself (first few lines). My sugestion is:
 `@snapdir = /.snapshots`. 
 
 3. `@device = /dev/sd<x>` is your device. Note that `@device` is NOT a subvolume.
-the symbol `@` used here is part of Ruby's syntax for a certain kind of variable definition.
+The symbol `@` used here is part of Ruby's syntax for a certain kind of variable definition.
 
 4. Yet, both `@root` and `@snapshots` subvolumes (following my suggestion but you
 may give any names you want) must lie in the same partition.
