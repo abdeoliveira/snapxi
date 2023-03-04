@@ -11,7 +11,7 @@ Script to manipulate BTRFS snapshots optimized for Void's xbps package manager.
 `snapxi` expects a few things to work properly which shall be defined
 in the code itself (first few lines). My sugestion is:
 
-1. `@rootvol = @root`, where `@root` is the subvolume to be mounted to `\`
+1. `@rootvol = @root`, where `@root` is the subvolume to be mounted to `/`
 
 2. `@snapvol = @snapshots`, where `@snapshots` is the subvolume to be mounted to 
 `@snapdir = /.snapshots`. 
