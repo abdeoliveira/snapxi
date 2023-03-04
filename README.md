@@ -27,7 +27,7 @@ giving the following fail message if not met: `Mounting stage went wrong. ABORTE
 ## Note on encrypted devices
 
 For the aforementioned `@device` you need to use `/dev/mapper/<something>` instead of the usual `/dev/sd<X>`. 
-A good test to check if your system meets `snapxi` requirements is to mount your `@device` to `/mnt`, like: `sudo mount /dev/mapper/crypto-luks /mnt`. After successful mount, you must see `@` and  `@snapshots` subvolumes in `/mnt`. 
+A good test to check if your system meets `snapxi` requirements is to mount your `@device` to `/mnt`, like: `sudo mount /dev/mapper/crypto-luks /mnt`. After successful mount, you must see the `@root` and  `@snapshots` subvolumes in `/mnt`. 
 After such a test, you can safely unmount `/mnt` just doing `sudo umount /mnt`
 
 
