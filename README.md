@@ -6,25 +6,27 @@ Script to manipulate BTRFS snapshots optimized for Void's xbps package manager.
 
 - `ruby`
 
-- `vkpurge` (for rollbacks only).
-
 # Configuration
 
-`snapxi` expects a few things to work properly:
+`snapxi` expects a few things to work properly which shall be defined
+in the code itself (first few lines). My sugestion is:
 
-1. a subvolume `@` mounted to `/`.
+1. `@rootvol = @root`, where `@root` is the subvolume to be mounted to `\`
 
-2. a subvolume `@snapshots` mounted to `/.snapshots`. 
+2. `@snapvol = @snapshots`, where `@snapshots` is the subvolume to be mounted to 
+`@snapdir = /.snapshots`. 
 
-3. both `@` and `@snapshots` subvolumes to be in the same partition.
-Such a partition  must be specified in the `device = ` variable (first lines of 
-`snapxi` code). 
+3. `@device = /dev/sd<x>` is your device. Note that `@device` is NOT a subvolume.
+the symbol `@` used here is part of Ruby's syntax for a certain kind of variable definition.
+
+4. Yet, both `@root` and `@snapvol` subvolumes must lie in the same partition.
+This is important for rollbacks only and `snapxi` will check such a requirement
+giving the following fail message if not met: `Mounting stage went wrong. ABORTED.`
 
 ## Note on encrypted devices
 
-For the aforementioned `device` you need to use `/dev/mapper/[something]` instead of the usual `/dev/sd[X]`. A good test to 
-check if your system meets `snapxi` requirements is to mount your `device` to `/mnt`, like:
-`sudo mount /dev/mapper/crypto-luks /mnt`. After successful mount, you must see `@` and  `@snapshots` subvolumes in `/mnt`. 
+For the aforementioned `@device` you need to use `/dev/mapper/<something>` instead of the usual `/dev/sd<X>`. 
+A good test to check if your system meets `snapxi` requirements is to mount your `@device` to `/mnt`, like: `sudo mount /dev/mapper/crypto-luks /mnt`. After successful mount, you must see `@` and  `@snapshots` subvolumes in `/mnt`. 
 After such a test, you can safely unmount `/mnt` just doing `sudo umount /mnt`
 
 
