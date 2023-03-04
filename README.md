@@ -19,7 +19,8 @@ in the code itself (first few lines). My sugestion is:
 3. `@device = /dev/sd<x>` is your device. Note that `@device` is NOT a subvolume.
 the symbol `@` used here is part of Ruby's syntax for a certain kind of variable definition.
 
-4. Yet, both `@root` and `@snapvol` subvolumes must lie in the same partition.
+4. Yet, both `@root` and `@snapshots` subvolumes (following my suggestion but you
+may give any names you want) must lie in the same partition.
 This is important for rollbacks only and `snapxi` will check such a requirement
 giving the following fail message if not met: `Mounting stage went wrong. ABORTED.`
 
