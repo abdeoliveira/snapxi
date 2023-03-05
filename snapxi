@@ -55,9 +55,30 @@ def readinfo(id)
   date  = info[0]
   time  = info[1]
   desc  = info[2]
-  comm = desc[0..20]
   ker  = info[3]
-  return [date,time,comm,ker,pkgs]
+  #------------
+  comm = desc[0..20]
+  if desc.include?'+' 
+    desc.split('+').each_with_index do |d,j|
+      if j == 0
+        comm = d+"\n"
+      else
+        comm = comm + ' '*(39) + d + "\n" 
+      end
+    end
+  end
+  #--------------------
+  pklist = '' 
+  unless pkgs.empty?
+    pklist = pkgs[0]+"\n"
+    pkgs.each_with_index do |p,j|
+      unless j==0 
+        pklist = pklist + ' '*60 + p + "\n" 
+      end
+    end
+  end
+  #--------------------
+  return [date,time,comm,ker,pklist]
 end
 #==========================
 def list
@@ -78,18 +99,11 @@ def list
       time = readinfo(id)[1]
       comm = readinfo(id)[2]
       ker = readinfo(id)[3]
-      pkgs = readinfo(id)[4]
-      pklist = '' 
-      unless pkgs.empty?
-        pklist = pkgs[0]+"\n"
-        pkgs.each_with_index do |p,j|
-          unless j==0 
-            pklist = pklist + ' '*60 + p + "\n" 
-          end
-        end
-      end
+      pklist = readinfo(id)[4]
+      #--------------------
       space = ' '*(4-id.to_s.size)
       kspace = 10 - ker.size
+      #--------------------
       puts space\
         +'['+id.to_s+']'\
         +' '*2+date\
@@ -241,7 +255,7 @@ end
 #==================================
 def update
   pkg = ""
-  update = `xi -Mun`
+  update = `xbps-install -Mun`
   if update.empty?
      puts "There are no updates."
      abort
@@ -260,7 +274,7 @@ def update
   ans = STDIN.gets.chomp
   unless ans == 'n'
     snapshot('pre update',pkgs,false)    
-    puts `xi -Suy`
+    puts `xbps-install -Suy`
     id = snapid.last
     snapshot("post [#{id}]",'',false)
     if kernel_update
