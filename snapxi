@@ -35,7 +35,6 @@ def snapid
 end
 #==========================
 def snapshot(comm,fake)
-  comm = comm.gsub(';','')
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
@@ -44,6 +43,7 @@ def snapshot(comm,fake)
   unless fake 
     puts `btrfs subvolume snapshot / #{path}/data` 
   end
+  comm = comm.gsub(';','')
   info = "#{now};#{comm};#{ker}"
   File.write("#{path}/info",info,mode:'w')
 end
