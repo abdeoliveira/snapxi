@@ -49,7 +49,7 @@ def snapshot(comm,fake)
 end
 #==========================
 def splitstr(string,shift)
-  max = 45
+  max = 40
   line = ''
   total = 0
   string.split(' ').each do |s|
