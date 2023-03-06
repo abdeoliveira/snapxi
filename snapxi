@@ -18,7 +18,7 @@ ABORTED."
 end
 #==========================
 def now
- Time.new.strftime "%Y.%m.%d,%H:%M:%S"
+ Time.new.strftime "%Y.%m.%d;%H:%M:%S"
 end
 #==========================
 def letters
@@ -34,7 +34,8 @@ def snapid
   return id_list.sort
 end
 #==========================
-def snapshot(comm,pkgs,fake)
+def snapshot(comm,fake)
+  comm = comm.gsub(';','')
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
   ker = `uname -r`.chomp
@@ -43,20 +44,38 @@ def snapshot(comm,pkgs,fake)
   unless fake 
     puts `btrfs subvolume snapshot / #{path}/data` 
   end
-  info = "#{now},#{comm},#{ker}"
+  info = "#{now};#{comm};#{ker}"
   File.write("#{path}/info",info,mode:'w')
-  File.write("#{path}/pkgs",pkgs,mode:'a')
+  #File.write("#{path}/pkgs",pkgs,mode:'a')
+end
+#==========================
+def splitstr(string,shift)
+  max = 45
+  line = ''
+  total = 0
+  string.split(' ').each do |s|
+    scut = s[0..max]
+    total = total + scut.size
+    if total <= max
+      line = line + scut + ' '
+    else
+      total = scut.size
+      line = line + "\n" + ' '*shift + scut
+    end
+  end
+  return line
 end
 #==========================
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
-  info = File.read(path + '/info').strip.split(',')
-  pkgs = File.read(path + '/pkgs').strip.delete('[]"').split(',')
+  info = File.read(path + '/info').strip.split(';')
+  #pkgs = File.read(path + '/pkgs').strip.delete('[]"').split(',')
   date  = info[0]
   time  = info[1]
   desc  = info[2]
   ker  = info[3]
   #------------
+=begin
   comm = desc[0..20]
   if desc.include?'+' 
     desc.split('+').each_with_index do |d,j|
@@ -67,7 +86,10 @@ def readinfo(id)
       end
     end
   end
+=end
+comm = splitstr(desc,40)
   #--------------------
+=begin
   pklist = '' 
   unless pkgs.empty?
     pklist = pkgs[0]+"\n"
@@ -77,8 +99,9 @@ def readinfo(id)
       end
     end
   end
+=end
   #--------------------
-  return [date,time,comm,ker,pklist]
+  return [date,time,comm,ker]
 end
 #==========================
 def list
@@ -91,15 +114,14 @@ def list
       +' '*6+"DATE"\
       +' '*7+"TIME"\
       +' '*4+"KERNEL"\
-      +' '*4+"COMMENT"\
-      +' '*14+"PKGS"
+      +' '*4+"COMMENT"
     puts "-"*line
     snapid.each do |id|
       date = readinfo(id)[0]
       time = readinfo(id)[1]
       comm = readinfo(id)[2]
       ker = readinfo(id)[3]
-      pklist = readinfo(id)[4]
+      #pklist = readinfo(id)[4]
       #--------------------
       space = ' '*(4-id.to_s.size)
       kspace = 10 - ker.size
@@ -153,7 +175,7 @@ def rollback
     end
     #----------------
     id = snapid.last + 1
-    snapshot("pre rollback to [#{rollid}]",'',true)
+    snapshot("pre rollback to [#{rollid}]",true)
     `mv /mnt/#{@rootvol} /mnt/#{@snapvol}/#{id}/data`
     `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
     `umount /mnt`
@@ -254,7 +276,7 @@ def delete
 end
 #==================================
 def update
-  pkg = ""
+  pkg = ''
   update = `xbps-install -Mun`
   if update.empty?
      puts "There are no updates."
@@ -273,12 +295,12 @@ def update
   puts "Proceed? [Y/n]"
   ans = STDIN.gets.chomp
   unless ans == 'n'
-    snapshot('pre update',pkgs,false)    
+    snapshot("pre update: #{pkgs.join(', ')}",false)    
     puts `xbps-install -Suy`
     id = snapid.last
-    snapshot("post [#{id}]",'',false)
+    snapshot("post [#{id}]",false)
     if kernel_update
-      File.write('/tmp/snapxi-kernel-update',pkgs,mode:'w')
+      File.write('/tmp/snapxi-kernel-update',pkgs.join(', '),mode:'w')
       puts "================="
       puts "    IMPORTANT:"
       puts "================="
@@ -293,7 +315,7 @@ def update
 opt = ARGV[0]
 #==================================
 if opt == 'snapshot'
-  snapshot(ARGV[1],'',false)
+  snapshot(ARGV[1],false)
 end
 
 if opt == 'list'
