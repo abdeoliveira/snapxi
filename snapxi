@@ -77,7 +77,6 @@ def readinfo(id)
 end
 #==========================
 def list
-    pklist = '' 
     line = 85
     puts "="*line
     puts " "*(line/2)+"SNAPSHOTS"
@@ -102,8 +101,7 @@ def list
         +' '*2+date\
         +' '*2+time\
         +' '*2+ker\
-        +' '*kspace+comm\
-        +' '*11+pklist.strip
+        +' '*kspace+comm
     end
     puts "-"*line 
 end
