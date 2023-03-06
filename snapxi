@@ -12,7 +12,7 @@ end
 #==========================
 if File.file?'/tmp/snapxi-kernel-update'
   puts "It seems you have upgraded the kernel recently without rebooting.\n\
-It is strongly recommended you reboot into the new kernel before using snapxi.\n\
+Please reboot into the new kernel before using snapxi.\n\
 ABORTED."
   abort
 end
@@ -276,7 +276,7 @@ def update
       puts "    IMPORTANT:"
       puts "================="
       puts "It seems you have upgraded the kernel." 
-      puts "It is recommended that you reboot the system before using snapxi again."
+      puts "Please reboot the system before using snapxi."
     end
   else
     puts "ABORTED."
