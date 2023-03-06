@@ -46,7 +46,6 @@ def snapshot(comm,fake)
   end
   info = "#{now};#{comm};#{ker}"
   File.write("#{path}/info",info,mode:'w')
-  #File.write("#{path}/pkgs",pkgs,mode:'a')
 end
 #==========================
 def splitstr(string,shift)
@@ -56,11 +55,11 @@ def splitstr(string,shift)
   string.split(' ').each do |s|
     scut = s[0..max]
     total = total + scut.size
-    if total <= max
+    if total < max
       line = line + scut + ' '
     else
       total = scut.size
-      line = line + "\n" + ' '*shift + scut
+      line = line + "\n" + ' '*shift + scut + ' ' 
     end
   end
   return line
@@ -69,38 +68,11 @@ end
 def readinfo(id)
   path = @snapdir + '/' + id.to_s
   info = File.read(path + '/info').strip.split(';')
-  #pkgs = File.read(path + '/pkgs').strip.delete('[]"').split(',')
   date  = info[0]
   time  = info[1]
   desc  = info[2]
   ker  = info[3]
-  #------------
-=begin
-  comm = desc[0..20]
-  if desc.include?'+' 
-    desc.split('+').each_with_index do |d,j|
-      if j == 0
-        comm = d+"\n"
-      else
-        comm = comm + ' '*(39) + d + "\n" 
-      end
-    end
-  end
-=end
-comm = splitstr(desc,40)
-  #--------------------
-=begin
-  pklist = '' 
-  unless pkgs.empty?
-    pklist = pkgs[0]+"\n"
-    pkgs.each_with_index do |p,j|
-      unless j==0 
-        pklist = pklist + ' '*60 + p + "\n" 
-      end
-    end
-  end
-=end
-  #--------------------
+  comm = splitstr(desc,40)
   return [date,time,comm,ker]
 end
 #==========================
@@ -121,7 +93,6 @@ def list
       time = readinfo(id)[1]
       comm = readinfo(id)[2]
       ker = readinfo(id)[3]
-      #pklist = readinfo(id)[4]
       #--------------------
       space = ' '*(4-id.to_s.size)
       kspace = 10 - ker.size
@@ -288,7 +259,7 @@ def update
      update.split("\n").each do |u|
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
-       pkgs<<item[0]
+       pkgs<<"(#{item[1][0]})#{item[0]}"
        if item[0].include? 'linux' then kernel_update=true end
      end
    end
