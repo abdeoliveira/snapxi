@@ -259,7 +259,7 @@ def update
      update.split("\n").each do |u|
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
-       pkgs<<"(#{item[1][0]})#{item[0]}"
+       pkgs<<"(#{item[1][0]})-#{item[0]}"
        if item[0].include? 'linux' then kernel_update=true end
      end
    end
