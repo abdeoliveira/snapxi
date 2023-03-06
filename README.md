@@ -41,6 +41,9 @@ After such a test, you can safely unmount `/mnt` just doing `sudo umount /mnt`
 
 Run `sudo snapxi help` for commands. 
 
+Also check the small tutorial on [YouTube](https://youtu.be/pP1XR38-FBE).
+
+
 # Troubleshooting
 
 # Known Bugs 
