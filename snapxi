@@ -148,7 +148,7 @@ def rollback
     id = snapid.last + 1
     snapshot("pre rollback to [#{rollid}]",true)
     `mv /mnt/#{@rootvol} /mnt/#{@snapvol}/#{id}/data`
-    `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/@root`
+    `btrfs subvolume snapshot /mnt/#{@snapvol}/#{rollid}/data /mnt/#{@rootvol}`
     `umount /mnt`
     root_id = `btrfs subvolume list / | grep #{@rootvol}`.split(' ')[1].to_i
     `btrfs subvolume set-default #{root_id} /`
