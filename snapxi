@@ -10,12 +10,12 @@ unless ENV['USER'] == 'root'
   abort
 end
 #==========================
-if File.file?'/tmp/snapxi-kernel-update'
-  puts "It seems you have upgraded the kernel recently without rebooting.\n\
-Please reboot into the new kernel before using snapxi.\n\
-ABORTED."
-  abort
-end
+#if File.file?'/tmp/snapxi-kernel-update'
+#  puts "It seems you have upgraded the kernel recently without rebooting.\n\
+#Please reboot into the new kernel before using snapxi.\n\
+#ABORTED."
+#  abort
+#end
 #==========================
 def now
  Time.new.strftime "%Y.%m.%d;%H:%M:%S"
@@ -270,11 +270,11 @@ def update
     snapshot("post [#{id}]",false)
     if kernel_update
       File.write('/tmp/snapxi-kernel-update',pkgs.join(', '),mode:'w')
-      puts "================="
-      puts "    IMPORTANT:"
-      puts "================="
+      puts "========================"
+      puts "    KERNEL UPGRADE:"
+      puts "========================"
       puts "It seems you have upgraded the kernel." 
-      puts "Please reboot the system before using snapxi."
+      puts "Please reboot in order to load it."
     end
   else
     puts "ABORTED."
