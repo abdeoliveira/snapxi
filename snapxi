@@ -34,6 +34,10 @@ def snapid
   return id_list.sort
 end
 #==========================
+def ping
+  return `ping -c 1 1.1.1.1 > /dev/null 2>&1; echo $?`
+end
+#==========================
 def snapshot(comm,fake)
   id = snapid.last.to_i + 1
   path = @snapdir + '/' + id.to_s
@@ -245,6 +249,10 @@ def delete
 end
 #==================================
 def update
+  unless ping == 0
+    puts 'No internet connection. ABORTED.'
+    abort
+  end
   pkg = ''
   update = `xbps-install -Mun`
   if update.empty?
