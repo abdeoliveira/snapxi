@@ -35,7 +35,7 @@ def snapid
 end
 #==========================
 def ping
-  return `ping -c 1 1.1.1.1 > /dev/null 2>&1; echo $?`
+  return `ping -c 1 1.1.1.1 > /dev/null 2>&1; echo $?`.to_i
 end
 #==========================
 def snapshot(comm,fake)
