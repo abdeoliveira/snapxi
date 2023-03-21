@@ -266,7 +266,9 @@ def update
        item = u.split(' ')
        puts "* #{item[0]} #{item[1]}"
        pkgs<<"(#{item[1][0]})-#{item[0]}"
-       if item[0].include? 'linux' then kernel_update=true end
+       if item[0].include? 'linux6' 
+         kernel_update=true 
+       end
      end
    end
   puts "Proceed? [Y/n]"
@@ -279,10 +281,10 @@ def update
     if kernel_update
       File.write('/tmp/snapxi-kernel-update',pkgs.join(', '),mode:'w')
       puts "========================"
-      puts "    KERNEL UPGRADE:"
+      puts "    KERNEL UPGRADE"
       puts "========================"
       puts "It seems you have upgraded the kernel." 
-      puts "Please reboot in order to load it."
+      puts "If it is the case, please reboot in order to load it."
     end
   else
     puts "ABORTED."
